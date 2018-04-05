@@ -34,12 +34,11 @@ void main() {
 	char buf[1000];
 	memset(buf, 0, 1000);
 	strcpy(buf, "World");
-	write(connfd, buf, strlen(buf) + 1);
+	write(sockfd, buf, strlen(buf) + 1);
 
-	int sz = read(connfd, buf, 1000);
+	int sz = read(sockfd, buf, 1000);
 	buf[sz] = '\0';
 	printf("%s", buf);
 
-	close(connfd);
-	close(serveraddr);
+	close(sockfd);
 }
