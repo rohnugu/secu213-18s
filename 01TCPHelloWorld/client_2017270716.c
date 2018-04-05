@@ -20,9 +20,20 @@ void main(){
 
 	memset(&addr, 0, sizeof(struct sockaddr_in));
 
+	union{
+		unsigned int addr;
+		unsigned char c[4];
+	}un;
+	
+	un.c[0] = 1;
+	un.c[1] = 0;
+	un.c[2] = 0;
+	un.c[3] = 127;
+
+
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(8080);
-	addr.sin_addr.s_addr = 0;
+	addr.sin_addr.s_addr = un.addr;
 
 	int err = connect(sockfd, (struct sockaddr*)&addr, sizeof(struct sockaddr_in));
 	if(err == -1){
