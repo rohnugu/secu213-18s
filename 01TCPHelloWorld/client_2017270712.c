@@ -24,7 +24,7 @@ void main() {
 	serveraddr.sin_port = htons(8080);
 	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	int serverfd = connect(sockfd, serveraddr, sizeof(struct sockaddr_in));
+	int serverfd = connect(sockfd,(const struct sockaddr *) &serveraddr, sizeof(serveraddr));
 
 	if(serverfd == -1) {
 		printf("connect error\n");
@@ -34,14 +34,10 @@ void main() {
 	char buf[1000];
 	memset(buf, 0, 1000);
 	strcpy(buf, "World");
-
 	write(connfd, buf, strlen(buf) + 1);
 
-
 	int sz = read(connfd, buf, 1000);
-
 	buf[sz] = '\0';
-
 	printf("%s", buf);
 
 	close(connfd);
