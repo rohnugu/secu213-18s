@@ -24,9 +24,9 @@ void main() {
 	serveraddr.sin_port = htons(8080);
 	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-	int serverfd = connect(sockfd,(const struct sockaddr *) &serveraddr, sizeof(serveraddr));
+	int err = connect(sockfd,(const struct sockaddr *) &serveraddr, sizeof(serveraddr));
 
-	if(serverfd == -1) {
+	if(err == -1) {
 		printf("connect error\n");
 		exit(1);
 	}
