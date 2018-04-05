@@ -31,12 +31,12 @@ void main() {
 		exit(1);
 	}
 
+	char buf[1000];
 	memset(buf, 0, 1000);
 	strcpy(buf, "World");
 
 	write(connfd, buf, strlen(buf) + 1);
 
-	char buf[1000];
 
 	int sz = read(connfd, buf, 1000);
 
