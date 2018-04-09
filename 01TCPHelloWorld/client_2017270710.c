@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
 
-void main() {
+int main() {
 
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -16,30 +16,44 @@ void main() {
 		exit(1);
 	}
 
-	struct sockaddr_in serveraddr;
+	struct sockaddr_in addr;
 
-	memset(&serveraddr, 0, sizeof(struct sockaddr_in));
+	memset(&addr, 0, sizeof(struct sockaddr_in));
 
-	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_port = htons(8080);
-	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	union {
+		unsigned int addr;
+		unsigned char c[4];
+	}un;
 
-	int err = connect(sockfd, (const struct sockaddr *) &serveraddr, sizeof(serveraddr));
+	un.c[0] = 1;
+	un.c[1] = 0;
+	un.c[2] = 0;
+	un.c[3] = 127;
 
-	if (err == -1) {
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(8080);
+	addr.sin_addr.s_addr = un.addr;
+
+	int connfd = connect(sockfd, (const struct sockaddr *) &addr, sizeof(struct sockaddr_in));
+
+	if (connfd == -1) {
 		printf("connect error\n");
 		exit(1);
 	}
 
 	char buf[1000];
+
 	memset(buf, 0, 1000);
-	strcpy(buf, "World");
+	strcpy(buf, "hello");
 	write(sockfd, buf, strlen(buf) + 1);
 
-	int sz = read(sockfd, buf, 1000);
-	buf[sz] = '\0';
+	buf[sz] = "\0";
 	printf("%s", buf);
 
-	close(sockfd);
+	close(connfd);
 }
+
+
+
+
 
