@@ -73,6 +73,11 @@ Vagrant.configure(2) do |config|
 			sudo apt-get install -y curl
 			sudo apt-get install -y traceroute
 			sudo apt-get install -y build-essential
+			cd ~
+			git clone http://github.com/rohnugu/secu213-18s
+			cd secu213-18s/01TCPHelloWorld
+			make client_vagrant
+			make server_vagrant			
 			sudo route add -net 192.168.0.0/16 gw 192.168.42.1
 			sudo /etc/init.d/ssh restart			
 		SHELL
