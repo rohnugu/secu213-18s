@@ -1,0 +1,92 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+	# If you use 'vagrant ssh router', you do not need to set the following username/password.
+	# However, if you want to debug your router VM in VirtualBox GUI, set the following.
+	# Note: Your VM Box may not show any screen: press Ctrl + Alt + F1 in the VirtualBox GUI to open a terminal.
+	#config.ssh.username = 'vagrant'
+	#config.ssh.password = 'vagrant'
+
+	config.vm.define :router do |box|
+		box.vm.box = "ubuntu/xenial64"
+		box.vm.box_check_update = false
+		box.vm.network "forwarded_port", guest: 22, host: 2200, id: 'ssh'
+		# Add private network NICS
+		box.vm.provider :virtualbox do |vb|
+			vb.gui = true
+			vb.customize ['modifyvm', :id, '--nic1', 'nat']
+			vb.customize ['modifyvm', :id, '--nic2', 'intnet']
+			vb.customize ['modifyvm', :id, '--intnet2', 'port1']
+			vb.customize ['modifyvm', :id, '--nic3', 'intnet']
+			vb.customize ['modifyvm', :id, '--intnet3', 'port2']
+			vb.customize ['modifyvm', :id, '--nic4', 'intnet']
+			vb.customize ['modifyvm', :id, '--intnet4', 'port3']
+		end
+  		
+		# Add usb filter for TP-LINK 
+		# box.vm.provider :virtualbox do |vb|
+		# 	vb.customize ['modifyvm', :id, '--usb', 'on']
+		# 	vb.customize ['modifyvm', :id, '--usbehci', 'on']
+		# 	vb.customize ['usbfilter', 'add', '0', '--target', :id, '--name', 'ATHEROS USB2.0 WLAN [0108]', '--vendorid', '0x0cf3', '--productid', '0x9271', '--revision', '0x0108', '--manufacturer','ATHEROS', '--product', 'USB2.0 WLAN', '--serialnumber','12345']
+		# end
+	end
+
+	# https://askubuntu.com/questions/832137/ubuntu-xenial64-box-password
+	# https://dev-notes.eu/2016/08/persistent-iptables-rules-in-ubuntu-16-04-xenial-xerus/
+	# https://winterj.me/iptables-Save/
+ 	config.vm.provision "shell", inline: <<-SHELL
+		sudo apt-get update
+ 		sudo apt-get install -y expect
+		echo '#!/usr/bin/expect
+  			set timeout 20
+  			spawn sudo passwd ubuntu
+  			expect "Enter new UNIX password:" {send "ubuntu\\r"}
+  			expect "Retype new UNIX password:" {send "ubuntu\\r"}
+  			interact' > change_ubuntu_password
+			chmod +x change_ubuntu_password
+		./change_ubuntu_password		
+		sudo apt-get install -y vim
+		sudo apt-get install -y dnsmasq
+		sudo apt-get install -y curl
+		sudo apt-get install -y traceroute
+		sudo cp /vagrant/sshd_config /etc/ssh/sshd_config
+		sudo cp /vagrant/dnsmasq.conf /etc/dnsmasq.conf
+		sudo cp /vagrant/interfaces /etc/network/interfaces
+		sudo ifdown enp0s3
+		sudo ifdown enp0s8
+		sudo ifdown enp0s9
+		sudo ifdown enp0s10
+		sudo ifup enp0s3
+		sudo ifup enp0s8
+		sudo ifup enp0s9
+		sudo ifup enp0s10
+		sudo service dnsmasq restart
+		sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
+		sudo iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE
+		sudo iptables -A FORWARD -i enp0s3 -o enp0s8 -m state --state RELATED,ESTABLISHED -j ACCEPT
+		sudo iptables -A FORWARD -i enp0s3 -o enp0s9 -m state --state RELATED,ESTABLISHED -j ACCEPT
+		sudo iptables -A FORWARD -i enp0s3 -o enp0s10 -m state --state RELATED,ESTABLISHED -j ACCEPT
+		sudo iptables -A FORWARD -i enp0s8 -o enp0s3 -j ACCEPT
+		sudo iptables -A FORWARD -i enp0s9 -o enp0s3 -j ACCEPT
+		sudo iptables -A FORWARD -i enp0s10 -o enp0s3 -j ACCEPT
+		sudo /etc/init.d/ssh restart		
+	SHELL
+end
+
+		# sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
+		# sudo sh -c "iptables-save > /vagrant/iptables.rules.old"
+		# if [ -f /vagrant/rules.v4 ]; then
+		# 	sudo iptables-restore < /vagrant/iptables/rules.v4
+		# 	sudo iptables-save -c > /etc/iptables/rules.v4
+		# else
+		# 	sudo iptables -t nat -A POSTROUTING -o enp0s3 -j MASQUERADE
+		# 	sudo iptables -A FORWARD -i enp0s3 -o enp0s8 -m state --state RELATED,ESTABLISHED -j ACCEPT
+		# 	sudo iptables -A FORWARD -i enp0s3 -o enp0s9 -m state --state RELATED,ESTABLISHED -j ACCEPT
+		# 	sudo iptables -A FORWARD -i enp0s3 -o enp0s10 -m state --state RELATED,ESTABLISHED -j ACCEPT
+		# 	sudo iptables -A FORWARD -i enp0s8 -o enp0s3 -j ACCEPT
+		# 	sudo iptables -A FORWARD -i enp0s9 -o enp0s3 -j ACCEPT
+		# 	sudo iptables -A FORWARD -i enp0s10 -o enp0s3 -j ACCEPT
+		# 	sudo iptables-save -c > /etc/iptables/rules.v4
+		# 	sudo iptables-save -c > /vagrant/rules.v4
+		# fi

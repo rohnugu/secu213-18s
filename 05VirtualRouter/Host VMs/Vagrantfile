@@ -1,0 +1,114 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# http://www.brianlinkletter.com/how-to-use-virtualbox-to-emulate-a-network/
+
+Vagrant.configure(2) do |config|
+	#if you set your box's username and password, the following will be helpful
+	#config.ssh.username = 'vagrant'
+	#config.ssh.password = 'vagrant'
+
+	config.vm.define :host1 do |box|
+		box.vm.box = "ubuntu/xenial64"
+		box.vm.box_check_update = false
+		box.vm.network "forwarded_port", guest: 22, host: 2201, id: 'ssh'
+		box.vm.provider :virtualbox do |vb|
+			vb.gui = false
+		end
+		#box.vm.network "public_network"
+		box.vm.network "private_network",
+			#auto_config: false,
+			type: "dhcp",
+			virtualbox__intnet: "port1"
+ 		box.vm.provision "shell", inline: <<-SHELL
+ 			sudo apt-get update
+ 			sudo apt-get install -y expect
+    		echo '#!/usr/bin/expect
+      			set timeout 30
+      			spawn sudo passwd ubuntu
+      			expect "Enter new UNIX password:" {send "ubuntu\\r"}
+      			expect "Retype new UNIX password:" {send "ubuntu\\r"}
+      			interact' > change_ubuntu_password
+    			chmod +x change_ubuntu_password
+  			./change_ubuntu_password
+			sudo cp /vagrant/sshd_config /etc/ssh/sshd_config
+			sudo apt-get install -y vim
+			sudo apt-get install -y curl
+			sudo apt-get install -y traceroute
+			sudo apt-get install -y build-essential
+			cd ~
+			git clone http://github.com/rohnugu/secu213-18s
+			cd secu213-18s/01TCPHelloWorld
+			make client_vagrant
+			make server_vagrant
+			sudo route add -net 192.168.0.0/16 gw 192.168.41.1
+			sudo /etc/init.d/ssh restart
+		SHELL
+		end
+
+	config.vm.define :host2 do |box|
+		box.vm.box = "ubuntu/xenial64"
+		box.vm.box_check_update = false
+		box.vm.network "forwarded_port", guest: 22, host: 2202, id: 'ssh'
+		box.vm.provider :virtualbox do |vb|
+			vb.gui = false
+		end
+		#box.vm.network "public_network"
+		box.vm.network "private_network",
+			#auto_config: false,
+			type: "dhcp",
+			virtualbox__intnet: "port2"
+ 		box.vm.provision "shell", inline: <<-SHELL
+ 			sudo apt-get update
+ 			sudo apt-get install -y expect
+    		echo '#!/usr/bin/expect
+      			set timeout 30
+      			spawn sudo passwd ubuntu
+      			expect "Enter new UNIX password:" {send "ubuntu\\r"}
+      			expect "Retype new UNIX password:" {send "ubuntu\\r"}
+      			interact' > change_ubuntu_password
+    			chmod +x change_ubuntu_password
+  			./change_ubuntu_password
+			sudo cp /vagrant/sshd_config /etc/ssh/sshd_config  			
+			sudo apt-get install -y vim
+			sudo apt-get install -y curl
+			sudo apt-get install -y traceroute
+			sudo apt-get install -y build-essential
+			sudo route add -net 192.168.0.0/16 gw 192.168.42.1
+			sudo /etc/init.d/ssh restart			
+		SHELL
+    	end
+
+	config.vm.define :host3 do |box|
+		box.vm.box = "ubuntu/xenial64"
+		box.vm.box_check_update = false
+		box.vm.network "forwarded_port", guest: 22, host: 2203, id: 'ssh'
+		box.vm.provider :virtualbox do |vb|
+			vb.gui = false
+		end
+		#box.vm.network "public_network"
+		box.vm.network "private_network",
+			#auto_config: false,
+			type: "dhcp",
+			virtualbox__intnet: "port3"
+ 		box.vm.provision "shell", inline: <<-SHELL
+ 			sudo apt-get update
+ 			sudo apt-get install -y expect
+    		echo '#!/usr/bin/expect
+      			set timeout 30
+      			spawn sudo passwd ubuntu
+      			expect "Enter new UNIX password:" {send "ubuntu\\r"}
+      			expect "Retype new UNIX password:" {send "ubuntu\\r"}
+      			interact' > change_ubuntu_password
+    			chmod +x change_ubuntu_password
+  			./change_ubuntu_password
+			sudo cp /vagrant/sshd_config /etc/ssh/sshd_config  			
+			sudo apt-get install -y vim
+			sudo apt-get install -y curl
+			sudo apt-get install -y traceroute
+			sudo apt-get install -y build-essential
+			sudo route add -net 192.168.0.0/16 gw 192.168.43.1
+			sudo /etc/init.d/ssh restart
+		SHELL
+    	end
+
+end
