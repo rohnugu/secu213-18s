@@ -1,4 +1,7 @@
-
 03gethostbyname/t_gethostbyname
 02UNIXDomainSocket/sockname
 01TCPHelloWorld/endian
+05VirtualRouter/Host VMs/.vagrant/*
+05VirtualRouter/Router VM/.vagrant/*
+05VirtualRouter/Host VMs/ubuntu-xenial-16.04-cloudimg-console.log
+05VirtualRouter/Router VM/ubuntu-xenial-16.04-cloudimg-console.log
